@@ -18,7 +18,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String? selectedCategory;
   bool sortByAmount = false;
 
-
   @override
   void initState() {
     super.initState();
@@ -26,7 +25,8 @@ class _HomeScreenState extends State<HomeScreen> {
       Provider.of<ExpenseProvider>(context, listen: false).loadExpenses();
     });
   }
-   Map<String, IconData> categoryIcons = {
+
+  Map<String, IconData> categoryIcons = {
     'Food': Icons.fastfood,
     'Transport': Icons.directions_car,
     'Shopping': Icons.shopping_bag,
@@ -37,12 +37,20 @@ class _HomeScreenState extends State<HomeScreen> {
     'Other': Icons.category,
   };
 
-
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<ExpenseProvider>(context);
     final expenses = provider.expenses;
-    final categories = ['Food', 'Transport', 'Shopping', 'Other'];
+    final categories = [
+      'Food',
+      'Transport',
+      'Shopping',
+      'Bills',
+      'Entertainment',
+      'Health',
+      'Travel',
+      'Other'
+    ];
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -109,77 +117,84 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
 
           Expanded(
-            child: expenses.isEmpty
-                ? const Center(
-              child: Text(
-                'No expenses yet',
-                style: TextStyle(color: Colors.black54, fontSize: 16),
-              ),
-            )
-                : ListView.builder(
-              itemCount: expenses.length,
-              itemBuilder: (context, index) {
-                final e = expenses[index];
-                return Card(
-                  color: Colors.black,
-                  elevation: 2,
-                  margin: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.white,
-                      child: Icon(
-                        categoryIcons[e.category] ?? Icons.category,
-                        color: Colors.black,
+            child:
+                expenses.isEmpty
+                    ? const Center(
+                      child: Text(
+                        'No expenses yet',
+                        style: TextStyle(color: Colors.black54, fontSize: 16),
                       ),
+                    )
+                    : ListView.builder(
+                      itemCount: expenses.length,
+                      itemBuilder: (context, index) {
+                        final e = expenses[index];
+                        return Card(
+                          color: Colors.black,
+                          elevation: 2,
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.white,
+                              child: Icon(
+                                categoryIcons[e.category] ?? Icons.category,
+                                color: Colors.black,
+                              ),
+                            ),
+                            title: Text(
+                              e.title,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  e.category,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  DateFormat.yMMMd().format(e.date),
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            trailing: Text(
+                              '\₹${e.amount.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => AddEditExpenseScreen(expense: e),
+                                ),
+                              );
+                            },
+                            onLongPress: () {
+                              _confirmDelete(context, e, provider);
+                            },
+                          ),
+                        );
+                      },
                     ),
-                    title: Text(
-                      e.title,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          e.category,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          DateFormat.yMMMd().format(e.date),
-                          style: const TextStyle(
-                              color: Colors.white70, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                    trailing: Text(
-                      '\₹${e.amount.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              AddEditExpenseScreen(expense: e),
-                        ),
-                      );
-                    },
-                    onLongPress: () {
-                      _confirmDelete(context, e, provider);
-                    },
-                  ),
-                );
-              },
-            ),
           ),
         ],
       ),
@@ -201,7 +216,8 @@ class _HomeScreenState extends State<HomeScreen> {
     showModalBottomSheet(
       context: context,
       builder: (context) {
-        String? tempSelectedCategory = selectedCategory; // temp holder for modal
+        String? tempSelectedCategory =
+            selectedCategory; // temp holder for modal
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Container(
@@ -220,9 +236,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     final isSelected = tempSelectedCategory == cat;
                     return ListTile(
                       title: Text(label),
-                      trailing: isSelected
-                          ? const Icon(Icons.check, color: Colors.black)
-                          : null,
+                      trailing:
+                          isSelected
+                              ? const Icon(Icons.check, color: Colors.black)
+                              : null,
                       onTap: () {
                         setModalState(() {
                           tempSelectedCategory = cat;
@@ -235,14 +252,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
-                        child:
-                        const Text('Cancel', style: TextStyle(color: Colors.black)),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(color: Colors.black),
+                        ),
                         onPressed: () => Navigator.pop(context),
                       ),
                       const SizedBox(width: 20),
                       ElevatedButton(
-                        child:
-                        const Text('Apply', style: TextStyle(color: Colors.black)),
+                        child: const Text(
+                          'Apply',
+                          style: TextStyle(color: Colors.black),
+                        ),
                         onPressed: () {
                           Navigator.pop(context);
                           setState(() {
@@ -262,33 +283,44 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _confirmDelete(BuildContext context, Expense e, ExpenseProvider provider) {
+  void _confirmDelete(
+    BuildContext context,
+    Expense e,
+    ExpenseProvider provider,
+  ) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: Colors.white,
-        title: const Text(
-          'Delete Expense',
-          style: TextStyle(color: Colors.black),
-        ),
-        content: const Text(
-          'Are you sure you want to delete this expense?',
-          style: TextStyle(color: Colors.black87),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.black54)),
+      builder:
+          (_) => AlertDialog(
+            backgroundColor: Colors.white,
+            title: const Text(
+              'Delete Expense',
+              style: TextStyle(color: Colors.black),
+            ),
+            content: const Text(
+              'Are you sure you want to delete this expense?',
+              style: TextStyle(color: Colors.black87),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.black54),
+                ),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await provider.deleteExpense(e);
+                  Navigator.pop(context);
+                },
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () async {
-              await provider.deleteExpense(e);
-              Navigator.pop(context);
-            },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
     );
   }
 }
